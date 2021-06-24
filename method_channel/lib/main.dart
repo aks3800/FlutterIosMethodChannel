@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(MyApp());
@@ -28,11 +29,22 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  static const platform = const MethodChannel('method_channel.flutter.dev/appIconBadge');
 
-  void _incrementCounter() {
+  // Get battery level.
+  String _badgeCount = 'Unknown badge count';
+
+  Future<void> _getBadgeCount() async {
+    String badgeCount;
+    try {
+      final int result = await platform.invokeMethod('getBadgeCount');
+      badgeCount = 'Badge count: $result';
+    } on PlatformException catch (e) {
+      badgeCount = "Failed to get badge count: '${e.message}'.";
+    }
+
     setState(() {
-      _counter++;
+      _badgeCount = badgeCount;
     });
   }
 
@@ -44,23 +56,16 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            ElevatedButton(
+              child: Text('Get Badge Count'),
+              onPressed: _getBadgeCount,
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
+            Text(_badgeCount),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ), //
     );
   }
 }
